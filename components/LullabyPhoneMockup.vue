@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 
 /**
  * Scroll-driven phone mockup for the storytelling section.
@@ -110,29 +110,29 @@ const resolvedKey = computed(() => {
   return STATES[key] ? key : 'sleep'
 })
 
-// Displayed key trails resolvedKey by one fade, mirroring the prototype's
-// fade-out -> swap -> fade-in sequence so the screen never hard-cuts.
-const displayedKey = ref(resolvedKey.value)
-const swapping = ref(false)
-let swapTimer = null
+// The parent supplies a scroll-synchronised state. Rendering it immediately
+// keeps the phone and active card in lockstep; individual visual properties
+// (orb, sky, colours and progress) retain their own CSS interpolation below.
+const s = computed(() => STATES[resolvedKey.value])
+const dashOffset = computed(() => C * (1 - s.value.progress))
 
-watch(resolvedKey, (next) => {
-  if (next === displayedKey.value) return
-  swapping.value = true
-  if (swapTimer) clearTimeout(swapTimer)
-  swapTimer = setTimeout(() => {
-    displayedKey.value = next
-    // next frame -> fade back in
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        swapping.value = false
-      })
-    })
-  }, 180)
+// The content updates immediately with its paired story card. This brief
+// visual settle only softens the new frame; it never holds back the new state.
+const isSettling = ref(false)
+let settleTimer = null
+
+watch(resolvedKey, () => {
+  isSettling.value = true
+  if (settleTimer) clearTimeout(settleTimer)
+  settleTimer = setTimeout(() => {
+    isSettling.value = false
+    settleTimer = null
+  }, 420)
 })
 
-const s = computed(() => STATES[displayedKey.value])
-const dashOffset = computed(() => C * (1 - s.value.progress))
+onBeforeUnmount(() => {
+  if (settleTimer) clearTimeout(settleTimer)
+})
 
 const careColor = (by) => CARE[by] || '#A8A2B8'
 </script>
@@ -140,8 +140,8 @@ const careColor = (by) => CARE[by] || '#A8A2B8'
 <template>
   <div
     class="lb-phone"
-    :class="{ 'is-swapping': swapping }"
-    :data-state="displayedKey"
+    :class="{ 'is-settling': isSettling }"
+    :data-state="resolvedKey"
     aria-hidden="true"
   >
     <div class="lb-viewport">
@@ -417,16 +417,20 @@ const careColor = (by) => CARE[by] || '#A8A2B8'
   min-height: 0;
 }
 
-/* the part that swaps on scroll; fades softly */
+/* The dynamic area is updated in the same frame as the active story card.
+   Individual visual primitives animate below; delaying this container caused
+   the old mockup to visibly trail behind a fast scroll. */
 .lb-dyn {
   display: flex;
   flex-direction: column;
   gap: 9px;
-  transition: opacity 0.32s ease, transform 0.32s ease;
+  transition:
+    opacity 620ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
 }
-.lb-phone.is-swapping .lb-dyn {
-  opacity: 0;
-  transform: translateY(6px);
+.lb-phone.is-settling .lb-dyn {
+  opacity: 0.88;
+  transform: translateY(1px);
 }
 
 /* baby header (static across states) */
