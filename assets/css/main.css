@@ -332,9 +332,9 @@ p {
   outline-offset: 3px;
 }
 
-/* App Store CTA. The familiar two-line marketplace lockup reduces the mental
-   work of choosing an install path; the inky, softly lit surface keeps it
-   recognisably Lullaby rather than dropping in a generic black rectangle. */
+/* App Store CTA. Keep the marketplace lockup visually close to Apple's
+   preferred black badge: it stays legible over the cinematic hero without
+   introducing a competing brand colour. */
 .app-store-badge {
   display: inline-flex;
   align-items: center;
@@ -343,21 +343,19 @@ p {
   min-width: 178px;
   min-height: 56px;
   padding: 8px 18px 8px 16px;
-  border: 1px solid rgba(255, 255, 255, 0.42);
-  border-radius: 16px;
-  background: linear-gradient(145deg, #273f53 0%, #142937 100%);
-  box-shadow:
-    0 14px 30px rgba(8, 22, 34, 0.28),
-    0 3px 0 rgba(8, 22, 34, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.58);
+  border-radius: 22px;
+  background: #000;
   color: #fff;
   line-height: 1;
   text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  will-change: transform;
   transition:
-    transform 180ms cubic-bezier(0.22, 0.61, 0.36, 1),
-    box-shadow 180ms ease,
+    transform 220ms cubic-bezier(0.16, 1, 0.3, 1),
     border-color 180ms ease,
-    filter 180ms ease;
+    background-color 180ms ease;
 }
 
 .app-store-badge-icon {
@@ -396,25 +394,18 @@ p {
 .app-store-badge--final {
   min-width: 196px;
   min-height: 60px;
-  background: linear-gradient(145deg, #243d51 0%, #102632 100%);
+  background: #000;
 }
 
 .app-store-badge:hover,
 .app-store-badge:focus-visible {
-  transform: translateY(-2px);
+  transform: translate3d(0, -3px, 0);
   border-color: rgba(255, 255, 255, 0.66);
-  filter: saturate(1.08) brightness(1.06);
-  box-shadow:
-    0 20px 36px rgba(8, 22, 34, 0.32),
-    0 6px 0 rgba(8, 22, 34, 0.12),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  background-color: #111;
 }
 
 .app-store-badge:active {
-  transform: translateY(1px) scale(0.985);
-  box-shadow:
-    0 8px 18px rgba(8, 22, 34, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  transform: translate3d(0, -1px, 0);
 }
 
 /* Keyboard focus uses the coral accent (the generic a:focus-visible blue would
@@ -2119,17 +2110,37 @@ summary:focus-visible {
     inset 0 1px 0 rgba(255, 255, 255, 0.52),
     0 12px 34px rgba(62, 92, 118, 0.08);
   overflow: hidden;
+  transition:
+    border-color 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 460ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 460ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.faq-item[open] {
+.faq-item[data-active='true'] {
+  border-color: rgba(121, 94, 168, 0.34);
   background:
-    linear-gradient(180deg, rgba(255, 253, 248, 0.98), rgba(230, 241, 248, 0.5)),
+    linear-gradient(180deg, rgba(255, 253, 248, 0.99), rgba(241, 235, 249, 0.7)),
     var(--surface);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.66),
+    0 18px 40px rgba(73, 57, 101, 0.1);
 }
 
-.faq-item summary {
+.faq-question {
+  margin: 0;
+}
+
+.faq-trigger {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 22px;
+  width: 100%;
+  border: 0;
+  background: transparent;
   cursor: pointer;
+  text-align: left;
   padding: 22px 58px 22px 22px;
   color: var(--steel);
   font-family:
@@ -2138,15 +2149,15 @@ summary:focus-visible {
   font-size: 1.04rem;
   font-weight: 850;
   line-height: 1.3;
-  list-style: none;
+  transition: color 260ms ease;
 }
 
-.faq-item summary::-webkit-details-marker {
-  display: none;
+.faq-trigger:focus-visible {
+  outline: 3px solid var(--peach-deep);
+  outline-offset: -5px;
 }
 
-.faq-item summary::after {
-  content: "+";
+.faq-icon {
   position: absolute;
   top: 50%;
   right: 22px;
@@ -2157,21 +2168,76 @@ summary:focus-visible {
   border: 1px solid rgba(62, 92, 118, 0.16);
   border-radius: 50%;
   background: rgba(255, 253, 248, 0.78);
-  color: var(--steel);
-  font-size: 1.1rem;
-  font-weight: 700;
   transform: translateY(-50%);
+  transition:
+    border-color 360ms cubic-bezier(0.16, 1, 0.3, 1),
+    background 360ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.faq-item[open] summary::after {
-  content: "-";
+.faq-icon::before,
+.faq-icon::after {
+  content: "";
+  position: absolute;
+  width: 10px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--steel);
+  transition: transform 420ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.faq-item p {
+.faq-icon::after {
+  transform: rotate(90deg);
+}
+
+.faq-item[data-active='true'] .faq-trigger {
+  color: var(--story-accent-ink);
+}
+
+.faq-item[data-active='true'] .faq-icon {
+  border-color: var(--story-accent-border);
+  background: var(--story-accent-soft);
+}
+
+.faq-item[data-active='true'] .faq-icon::before {
+  transform: rotate(45deg);
+}
+
+.faq-item[data-active='true'] .faq-icon::after {
+  transform: rotate(-45deg);
+}
+
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 460ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item[data-active='true'] .faq-panel {
+  grid-template-rows: 1fr;
+}
+
+.faq-answer {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.faq-answer p {
+  margin: 0;
   padding: 0 22px 22px;
   color: var(--cream-soft);
   font-size: 1rem;
   line-height: 1.65;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 180ms ease,
+    transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.faq-item[data-active='true'] .faq-answer p {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 100ms;
 }
 
 /* ── Closing / footer ─────────────────────────────────────────────────
@@ -3005,6 +3071,16 @@ summary:focus-visible {
 
   .story-live-dot {
     animation: none;
+  }
+
+  .faq-item,
+  .faq-trigger,
+  .faq-icon,
+  .faq-icon::before,
+  .faq-icon::after,
+  .faq-panel,
+  .faq-answer p {
+    transition: none !important;
   }
 
   .nav-cta,

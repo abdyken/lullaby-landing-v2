@@ -182,6 +182,13 @@ const faqs = [
   },
 ]
 
+// FAQ keeps one calm reading thread open at a time. Keeping the panel mounted
+// lets its height and copy animate both on opening and closing.
+const activeFaqIndex = ref(null)
+const toggleFaq = (index) => {
+  activeFaqIndex.value = activeFaqIndex.value === index ? null : index
+}
+
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max)
 
 // ── Hero scroll scene ──────────────────────────────────────────────────────
@@ -568,7 +575,7 @@ onBeforeUnmount(() => {
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Download Lullaby on the App Store"
-      >Download the app</a>
+      >Get Lullaby</a>
     </header>
 
     <main id="top">
@@ -801,15 +808,38 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="faq-list">
-            <details
+            <article
               v-for="(faq, index) in faqs"
               :key="faq.question"
               class="faq-item reveal-item"
+              :data-active="activeFaqIndex === index ? 'true' : undefined"
               :style="{ '--reveal-delay': `${index * 55}ms` }"
             >
-              <summary>{{ faq.question }}</summary>
-              <p>{{ faq.answer }}</p>
-            </details>
+              <h3 class="faq-question">
+                <button
+                  :id="`faq-trigger-${index}`"
+                  class="faq-trigger"
+                  type="button"
+                  :aria-expanded="activeFaqIndex === index"
+                  :aria-controls="`faq-panel-${index}`"
+                  @click="toggleFaq(index)"
+                >
+                  <span>{{ faq.question }}</span>
+                  <span class="faq-icon" aria-hidden="true"></span>
+                </button>
+              </h3>
+              <div
+                :id="`faq-panel-${index}`"
+                class="faq-panel"
+                role="region"
+                :aria-labelledby="`faq-trigger-${index}`"
+                :aria-hidden="activeFaqIndex !== index"
+              >
+                <div class="faq-answer">
+                  <p>{{ faq.answer }}</p>
+                </div>
+              </div>
+            </article>
           </div>
         </div>
       </section>
