@@ -1149,7 +1149,19 @@ summary:focus-visible {
   width: calc(100% + var(--flow-gap));
   height: 2px;
   border-radius: 2px;
-  background: linear-gradient(90deg, var(--seg-from, var(--line-strong)), var(--seg-to, var(--line-strong)));
+  background:
+    linear-gradient(90deg, var(--seg-from, var(--line-strong)), var(--seg-to, var(--line-strong))),
+    linear-gradient(
+      90deg,
+      transparent 0%,
+      transparent 44%,
+      rgba(255, 247, 235, 0.84) 50%,
+      transparent 56%,
+      transparent 100%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 230% 100%;
+  background-position: 0 0, 120% 0;
   transform: translateY(-50%);
   transform-origin: left center;
 }
@@ -1167,6 +1179,22 @@ summary:focus-visible {
 
 .reveal-ready .flow-step.is-revealed:not(:last-child)::after {
   transform: translateY(-50%) scaleX(1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready .flow-step.is-revealed:not(:last-child)::after {
+    animation: flow-rail-signal 840ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + 180ms);
+  }
+}
+
+@keyframes flow-rail-signal {
+  from {
+    background-position: 0 0, 120% 0;
+  }
+  to {
+    background-position: 0 0, -120% 0;
+  }
 }
 
 .flow-step {
@@ -1195,6 +1223,38 @@ summary:focus-visible {
   transition:
     border-color 240ms ease,
     box-shadow 240ms ease;
+}
+
+.flow-marker::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(232, 154, 119, 0.48);
+  border-radius: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.72);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready .flow-step.is-revealed .flow-marker::after {
+    animation: flow-marker-signal 720ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + 100ms);
+  }
+}
+
+@keyframes flow-marker-signal {
+  0% {
+    opacity: 0;
+    transform: scale(0.72);
+  }
+  28% {
+    opacity: 0.68;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.55);
+  }
 }
 
 .flow-step:nth-child(1) {
@@ -1234,28 +1294,34 @@ summary:focus-visible {
   opacity: 0.84;
 }
 
-/* Active moment (logging now): the timestamp leans in as the strongest anchor,
-   and the node breathes so the capture reads as live and in progress. */
+/* Active moment (logging now): the timestamp leans in as the strongest anchor. */
 .flow-step:nth-child(2) .flow-time {
   font-size: clamp(1.6rem, 2.6vw, 2.05rem);
   color: var(--ink);
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .flow-step:nth-child(2) .flow-marker {
-    animation: flow-active-pulse 2.8s ease-out infinite;
+  .reveal-ready .flow-step.is-revealed .flow-time {
+    animation: flow-time-settle 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + 130ms);
   }
 }
 
-@keyframes flow-active-pulse {
+@keyframes flow-time-settle {
   0% {
-    box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(232, 154, 119, 0.42);
+    opacity: 0.48;
+    text-shadow: none;
+    transform: translateY(5px);
   }
-  70% {
-    box-shadow: 0 0 0 4px var(--bg), 0 0 0 15px rgba(232, 154, 119, 0);
+  58% {
+    opacity: 1;
+    text-shadow: 0 0 14px rgba(232, 154, 119, 0.24);
+    transform: translateY(0);
   }
   100% {
-    box-shadow: 0 0 0 4px var(--bg), 0 0 0 5px rgba(232, 154, 119, 0);
+    opacity: 1;
+    text-shadow: none;
+    transform: translateY(0);
   }
 }
 
@@ -1274,6 +1340,7 @@ summary:focus-visible {
 }
 
 .flow-time {
+  display: inline-block;
   color: var(--steel);
   font-family:
     "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
@@ -1346,6 +1413,39 @@ summary:focus-visible {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+/* The log fragments arrive after the record itself settles: a small cascade
+   reads as events being saved, rather than as three static labels. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-ready .flow-fragments li {
+    opacity: 0;
+    transform: translate3d(0, 7px, 0);
+  }
+
+  .reveal-ready .flow-step.is-revealed .flow-fragments li {
+    animation: flow-fragment-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--reveal-delay, 0ms) + 570ms);
+  }
+
+  .reveal-ready .flow-step.is-revealed .flow-fragments li:nth-child(2) {
+    animation-delay: calc(var(--reveal-delay, 0ms) + 640ms);
+  }
+
+  .reveal-ready .flow-step.is-revealed .flow-fragments li:nth-child(3) {
+    animation-delay: calc(var(--reveal-delay, 0ms) + 710ms);
+  }
+}
+
+@keyframes flow-fragment-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 7px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
 }
 
 /* tiny square tick rather than a dot — reads as a logged mark in a record */
@@ -2652,7 +2752,18 @@ summary:focus-visible {
     left: var(--flow-node-x);
     width: 2px;
     height: calc(100% + var(--flow-gap));
-    background: linear-gradient(180deg, var(--seg-from, var(--line-strong)), var(--seg-to, var(--line-strong)));
+    background:
+      linear-gradient(180deg, var(--seg-from, var(--line-strong)), var(--seg-to, var(--line-strong))),
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        transparent 44%,
+        rgba(255, 247, 235, 0.84) 50%,
+        transparent 56%,
+        transparent 100%
+      );
+    background-size: 100% 100%, 100% 230%;
+    background-position: 0 0, 0 120%;
     transform: translateX(-50%);
     transform-origin: top center;
   }
@@ -2663,6 +2774,16 @@ summary:focus-visible {
 
   .reveal-ready .flow-step.is-revealed:not(:last-child)::after {
     transform: translateX(-50%) scaleY(1);
+    animation-name: flow-rail-signal-vertical;
+  }
+
+  @keyframes flow-rail-signal-vertical {
+    from {
+      background-position: 0 0, 0 120%;
+    }
+    to {
+      background-position: 0 0, 0 -120%;
+    }
   }
 
   .product-story {
@@ -2725,18 +2846,22 @@ summary:focus-visible {
   }
 
   .site-nav {
-    top: 10px;
+    /* Respect a notch / dynamic-island when the site is opened as a PWA, while
+       retaining the same 10px visual rhythm in a regular mobile browser. */
+    top: max(10px, calc(env(safe-area-inset-top) + 6px));
     width: calc(100% - 20px);
     padding-left: 14px;
   }
 
   .brand {
+    min-width: 44px;
+    min-height: 44px;
     font-size: 1.04rem;
   }
 
   .nav-cta {
-    min-height: 38px;
-    padding-inline: 15px;
+    min-height: 44px;
+    padding-inline: 16px;
     font-size: 0.82rem;
   }
 
@@ -2757,7 +2882,7 @@ summary:focus-visible {
 
   .hero-shrink-stage {
     min-height: auto;
-    padding: 96px 0 64px;
+    padding: max(96px, calc(env(safe-area-inset-top) + 86px)) 0 64px;
     border-radius: 0;
     transform: none;
     will-change: auto;
@@ -2830,6 +2955,14 @@ summary:focus-visible {
   .story-phone {
     width: min(318px, 82vw);
     height: 610px;
+  }
+
+  /* The live mockup uses its own frame component, so constrain its stage
+     directly. This gives it a deliberate gutter on 375–390px screens instead
+     of letting the hardware frame press against the content column. */
+  .story-phone-stage {
+    width: min(318px, 90vw);
+    margin-inline: auto;
   }
 
   .story-phone-main h2 {
